@@ -1,21 +1,20 @@
 using System.Collections.Generic;
 using Renegade.Ui;
 
-namespace GameTemplate.Game;
+namespace SpiderSolitaire.Game;
 
-/// <summary>
-/// The guided tour behind the Demo button: a few short pages, each with a looping clip recorded
-/// from the game itself (see Main.PlayClip and addons/renegade_core/tools/Record-Clips.ps1).
-/// Text only, no voice. A page without a clip (Video = null) just shows its text.
-/// </summary>
+/// <summary>The guided tour behind the Demo button: a few short pages.</summary>
 public static class Tutorial
 {
 	public static readonly IReadOnlyList<TutorialPage> Pages = new[]
 	{
-		new TutorialPage("Knock five times",
-			"Tap the board to knock on it. Five knocks finish a game, and the board catches fire. Replace this page with the real game's rules.",
-			"res://tutorial/knock.ogv"),
-		new TutorialPage("Tips",
-			"Drag sideways to spin the board, or freeze it in Settings."),
+		new TutorialPage("The goal",
+			"Spider uses two packs. Build each suit from king down to ace on the piles: a full suit comes off by itself. Take all eight off to win."),
+		new TutorialPage("Moving",
+			"Any card can go on a card one higher, whatever the suit. But only a run of one suit moves together, so build in suit when you can. Tap a card to send it, and the cards on it, to the best place."),
+		new TutorialPage("Dealing",
+			"Tap the stock, top right, to deal a card onto every pile. You can't deal while a pile is empty: put any card or run in it first."),
+		new TutorialPage("Help",
+			"Undo is free and goes back as far as you like; Hint shows a good move. New to Spider? Start with one suit (Settings › Suits); two and four suits are much harder."),
 	};
 }
