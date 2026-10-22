@@ -37,3 +37,8 @@ The score line shows the score, the moves and "Won X of Y" (a deal counts once y
 ## Scope for version 1
 The above. Later: drag to move, a timer, daily deals, tutorial clips, winnable deals for two and
 four suits (needs a stronger solver).
+
+## Changes from Darren's notes (2026-10-22)
+- Settings › Moving cards: drag and drop (the default) or tap to send, so a pile can go exactly where you want (into an empty pile, say).
+- The Windows-style cascade when you win; one soft sound per move; moves in the log.
+- Two and four suits were already in Settings › Suits (one suit is the default).

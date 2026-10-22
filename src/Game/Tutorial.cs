@@ -11,7 +11,7 @@ public static class Tutorial
 		new TutorialPage("The goal",
 			"Spider uses two packs. Build each suit from king down to ace on the piles: a full suit comes off by itself. Take all eight off to win."),
 		new TutorialPage("Moving",
-			"Any card can go on a card one higher, whatever the suit. But only a run of one suit moves together, so build in suit when you can. Tap a card to send it, and the cards on it, to the best place."),
+			"Any card can go on a card one higher, whatever the suit. But only a run of one suit moves together, so build in suit when you can. Drag a card, and the cards on it, where you want it (or choose Tap to send in Settings)."),
 		new TutorialPage("Dealing",
 			"Tap the stock, top right, to deal a card onto every pile. You can't deal while a pile is empty: put any card or run in it first."),
 		new TutorialPage("Help",

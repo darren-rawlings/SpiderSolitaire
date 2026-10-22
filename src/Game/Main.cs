@@ -16,7 +16,7 @@ namespace SpiderSolitaire.Game;
 /// </summary>
 public partial class Main : CardGame
 {
-	private const float Column = 0.68f, TopZ = -3.5f, TableauZ = -2.0f, Bottom = 3.7f, DownStep = 0.12f, UpStep = 0.3f;
+	private const float Column = 0.68f, TopZ = -2.5f, TableauZ = -1.05f, Bottom = 3.9f, DownStep = 0.12f, UpStep = 0.3f;
 
 	private readonly Card3D[] _nodes = new Card3D[104];
 	private readonly Stack<int> _actions = new();
@@ -27,7 +27,7 @@ public partial class Main : CardGame
 	private bool _counted;
 
 	protected override string Title => "Spider Solitaire";
-	protected override string Hint => "Tap a card to move it";
+	protected override string Hint => DragMode ? "Drag a card to move it" : "Tap a card to move it";
 	protected override bool HasLevels => false;
 	protected override bool HoldsCards => false;
 	protected override bool Solitaire => true;
@@ -36,10 +36,28 @@ public partial class Main : CardGame
 	protected override IReadOnlyList<TutorialPage> TutorialPages => Tutorial.Pages;
 	protected override bool InProgress => _game is { IsWon: false, Moves: > 0 };
 
+	/// <summary>The log keeps the whole of the current deal.</summary>
+	protected override int TalkRounds => 1;
+
 	private int Suits => Settings.Extra.TryGetValue("suits", out var s) && int.TryParse(s, out int n) && n is 1 or 2 or 4 ? n : 1;
+
+	/// <summary>Cards are dragged where you want them (the default); otherwise a tap sends a card to the best place.</summary>
+	private bool DragMode => !(Settings.Extra.TryGetValue("move", out var move) && move == "tap");
+
+	/// <summary>`--suits=2` (or 1, 4) for checks.</summary>
+	protected override void DevArg(string name, string value)
+	{
+		if (name == "--suits")
+			Settings.Extra["suits"] = value;
+	}
 
 	protected override void AddSettings()
 	{
+		Hud.AddChoice("Moving cards", new[] { "Drag and drop", "Tap to send" }, DragMode ? 0 : 1, choice =>
+		{
+			Settings.Extra["move"] = choice == 1 ? "tap" : "drag";
+			Settings.Save();
+		});
 		var choices = new[] { 1, 2, 4 };
 		Hud.AddChoice("Suits", new[] { "One suit", "Two suits", "Four suits" }, System.Array.IndexOf(choices, Suits), choice =>
 		{
@@ -109,17 +127,21 @@ public partial class Main : CardGame
 	}
 
 	/// <summary>Moves every card that isn't where it belongs, a little apart. Returns the last flight.</summary>
-	private Tween? Layout(float seconds = 0.24f, float apart = 0.03f)
+	private Tween? Layout(float seconds = 0.24f, float apart = 0.03f, bool everyCard = false)
 	{
 		Tween? last = null;
 		float delay = 0;
+		bool sounded = false;
 		foreach (var (id, at) in Places())
 		{
 			var node = _nodes[id];
 			if (node.GlobalTransform.IsEqualApprox(at))
 				continue;
 			bool turning = node.GlobalTransform.Basis.Z.Dot(at.Basis.Z) < 0;
-			last = CardMotion.Fly(node, at, seconds, lift: turning ? 0.25f : 0.14f, delay: delay, landed: () => Sounds.PlaySlap(at.Origin));
+			// One soft sound per move (a deal flicks every card down).
+			System.Action? landed = sounded && !everyCard ? null : () => Sounds.PlayFlick(at.Origin);
+			sounded = true;
+			last = CardMotion.Fly(node, at, seconds, lift: turning ? 0.25f : 0.14f, delay: delay, landed: landed);
 			delay += apart;
 		}
 		return last;
@@ -215,6 +237,8 @@ public partial class Main : CardGame
 			_undo.Visible = _hint.Visible = false;
 			var kings = game.Done.Select(d => _nodes[d[0]]);
 			Finish($"You win! Score {game.Score}.", 0, kings, DoneAt + new Vector3(0.56f, 0, 0));
+			News($"You won, with a score of {game.Score}.");
+			Run(Cascade(round));
 			return;
 		}
 		if (game.Stuck)
@@ -265,7 +289,13 @@ public partial class Main : CardGame
 		Busy = true;
 		Counted();
 		_actions.Push(game.History);
+		var pile = game.Pile(move.From);
+		var first = game.CardOf(pile[^move.Count].Id);
+		var onto = game.Pile(move.To).Count > 0 ? game.CardOf(game.Pile(move.To)[^1].Id).ToString() : null;
 		var done = game.Make(move);
+		News((move.Count == 1 ? first.ToString() : $"{first} and {move.Count - 1} more") + (onto != null ? $" onto {onto}." : " to the empty pile."));
+		if (done.Count > 0)
+			News(SuitOff());
 		await Show(done.Count > 0 ? SuitOff() : null);
 	}
 
@@ -278,7 +308,8 @@ public partial class Main : CardGame
 		_actions.Push(game.History);
 		var done = game.Deal();
 		Sounds.PlaySwish(StockAt);
-		await Await(Layout(0.28f, 0.07f));
+		News($"Dealt a row ({game.DealsLeft} {(game.DealsLeft == 1 ? "deal" : "deals")} left).");
+		await Await(Layout(0.28f, 0.07f, everyCard: true));
 		await Show(done.Count > 0 ? SuitOff() : null);
 	}
 
@@ -293,7 +324,6 @@ public partial class Main : CardGame
 	{
 		int round = Round;
 		Busy = true;
-		Sounds.PlaySwish(Table.Centre);
 		await Await(Layout());
 		if (status != null)
 		{
@@ -347,6 +377,94 @@ public partial class Main : CardGame
 
 	// ------------------------------------------------------------------ Taps
 
+	/// <summary>
+	/// The old Windows victory: once the finished suits have caught fire, their cards leave one by
+	/// one, kings first, and bounce down the table leaving trails behind them.
+	/// </summary>
+	private async Task Cascade(int round)
+	{
+		await Pause(1.2f);
+		if (round != Round || _game is not { IsWon: true } game)
+			return;
+		var order = new List<Card3D>();
+		for (int i = 0; i < 13; i++)
+			foreach (var suit in game.Done)
+				order.Add(_nodes[suit[i]]);
+		float half = LayoutWidth / 2 + 0.3f;
+		WinCascade.Start(this, order, Looks, new Rect2(-half, TopZ - 0.6f, half * 2, 4.6f - (TopZ - 0.6f)), CardTable.FeltY + 0.06f, gap: 0.12f);
+	}
+
+	// ------------------------------------------------------------------ Dragging
+
+	/// <summary>The cards being dragged (the first is the one picked up), the pile they came from, and where the finger holds them.</summary>
+	private (int From, int Count, List<Card3D> Nodes, Vector3 Grip)? _drag;
+
+	private const float DragHeight = 0.35f;
+
+	protected override bool BeginDrag(Vector3 origin, Vector3 direction, Vector2 screen)
+	{
+		if (!DragMode || _game is not { IsWon: false } game)
+			return false;
+		var node = HitCard(_nodes.Where(n => n != null), origin, direction);
+		if (node == null)
+			return false;
+		int id = System.Array.IndexOf(_nodes, node);
+		for (int p = 0; p < Spider.Piles; p++)
+		{
+			var pile = game.Pile(p);
+			int index = pile.Select(c => c.Id).ToList().IndexOf(id);
+			if (index < 0)
+				continue;
+			int count = pile.Count - index;
+			if (!pile[index].Up)
+				return false;
+			if (count > game.RunLength(p))
+			{
+				Run(Shake(node, "Only a run of one suit moves together."));
+				return false;
+			}
+			Hud.HideHint();
+			var nodes = pile.Skip(index).Select(c => _nodes[c.Id]).ToList();
+			var hold = OnPlane(origin, direction, CardTable.FeltY + DragHeight);
+			_drag = (p, count, nodes, nodes[0].GlobalPosition - hold);
+			DragTo(origin, direction);
+			return true;
+		}
+		return false;
+	}
+
+	protected override void DragTo(Vector3 origin, Vector3 direction)
+	{
+		if (_drag is not { } drag)
+			return;
+		var at = OnPlane(origin, direction, CardTable.FeltY + DragHeight) + drag.Grip with { Y = 0 };
+		for (int i = 0; i < drag.Nodes.Count; i++)
+			drag.Nodes[i].GlobalPosition = at + new Vector3(0, 0.004f * i, UpStep * i);
+	}
+
+	protected override void EndDrag(Vector3 origin, Vector3 direction, bool moved)
+	{
+		if (_drag is not { } drag || _game is not { } game)
+			return;
+		_drag = null;
+		if (moved)
+		{
+			var at = drag.Nodes[0].GlobalPosition;
+			int to = Mathf.RoundToInt(at.X / Column + 4.5f);
+			if (to is >= 0 and < Spider.Piles && Mathf.Abs(at.X - X(to)) < Column * 0.65f && at.Z > TableauZ - Card3D.Height)
+			{
+				var move = new Move(drag.From, to, drag.Count);
+				if (game.IsLegal(move))
+				{
+					Run(Do(move));
+					return;
+				}
+				Hud.SetStatus($"The {Describe(drag.Nodes[0].Card)} can't go there.", Muted);
+			}
+		}
+		Layout(0.2f);
+	}
+
 	protected override void Tapped(Vector3 origin, Vector3 direction, Vector2 screen)
 	{
 		if (_game is not { IsWon: false } game)
@@ -356,6 +474,9 @@ public partial class Main : CardGame
 		if (node == null)
 			return;
 		int id = System.Array.IndexOf(_nodes, node);
+		// With drag and drop, a tap only deals from the stock.
+		if (DragMode && !game.Stock.Contains(id))
+			return;
 		if (game.Stock.Contains(id))
 		{
 			if (game.CanDeal)
