@@ -280,6 +280,7 @@ public partial class Main : CardGame
 	/// <summary>Makes a move on the table, and shows it.</summary>
 	private async Task Do(Move move)
 	{
+		ClipMoment("move", 8);
 		var game = _game!;
 		Busy = true;
 		Counted();
@@ -297,6 +298,7 @@ public partial class Main : CardGame
 	/// <summary>Deals a card onto every pile.</summary>
 	private async Task Deal()
 	{
+		ClipMoment("deal", 5);
 		var game = _game!;
 		Busy = true;
 		Counted();
