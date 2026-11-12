@@ -1,19 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 432 432">
   <defs>
-    <radialGradient id="bg" cx="216" cy="250" r="260" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ff7a1a"/>
-      <stop offset="0.22" stop-color="#9a2008"/>
-      <stop offset="0.55" stop-color="#2e0d08"/>
-      <stop offset="1" stop-color="#140806"/>
+    <radialGradient id="felt" cx="216" cy="190" r="310" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5a3a8a"/>
+      <stop offset="1" stop-color="#150a26"/>
     </radialGradient>
+    <pattern id="weave" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="none"/><circle cx="1.5" cy="1.5" r="0.9" fill="#000" fill-opacity="0.12"/></pattern>
   </defs>
-  <rect width="432" height="432" fill="url(#bg)"/>
-  <g fill="#ffc24d">
-    <circle cx="92" cy="120" r="3" opacity="0.7"/>
-    <circle cx="338" cy="96" r="2.5" opacity="0.6"/>
-    <circle cx="356" cy="168" r="3.5" opacity="0.5"/>
-    <circle cx="70" cy="214" r="2.5" opacity="0.5"/>
-    <circle cx="120" cy="70" r="2" opacity="0.6"/>
-    <circle cx="312" cy="54" r="2" opacity="0.5"/>
-  </g>
+  <rect width="432" height="432" fill="url(#felt)"/>
+  <rect width="432" height="432" fill="url(#weave)"/>
+  <line x1='216' y1='216' x2='536' y2='216' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='493.13' y2='376' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='376' y2='493.13' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='216' y2='536' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='56' y2='493.13' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='-61.13' y2='376' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='-104' y2='216' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='-61.13' y2='56' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='56' y2='-61.13' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='216' y2='-104' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='376' y2='-61.13' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><line x1='216' y1='216' x2='493.13' y2='56' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><polyline points='276,216 267.96,246 246,267.96 216,276 186,267.96 164.04,246 156,216 164.04,186 186,164.04 216,156 246,164.04 267.96,186 276,216' fill='none' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><polyline points='331,216 315.59,273.5 273.5,315.59 216,331 158.5,315.59 116.41,273.5 101,216 116.41,158.5 158.5,116.41 216,101 273.5,116.41 315.59,158.5 331,216' fill='none' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><polyline points='391,216 367.55,303.5 303.5,367.55 216,391 128.5,367.55 64.45,303.5 41,216 64.45,128.5 128.5,64.45 216,41 303.5,64.45 367.55,128.5 391,216' fill='none' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/><polyline points='456,216 423.85,336 336,423.85 216,456 96,423.85 8.15,336 -24,216 8.15,96 96,8.15 216,-24 336,8.15 423.85,96 456,216' fill='none' stroke='#fff' stroke-opacity='0.13' stroke-width='3'/>
 </svg>
